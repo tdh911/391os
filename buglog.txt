@@ -1,0 +1,130 @@
+ALL BUGS:
+
+1) GREP NOT WORKING
+    - We took out the new line character in the keyboard buffer
+    - 1 hour
+2) "CAT (space)" not working
+    - return -1
+    - 15 minutes
+3)  Ctrl + l would result in a continuation of the previous line
+    - Resolved by adding a condition in keyboard read that would enable enter flag and send in empty buffer, similar to pressing enter. Enter flag would then be disabled within a condition in keyboard read
+    - 30 minutes
+4) PAGE FAULT EXITING OUT OF TERMS 1 AND 2
+    - problem with all shells being in one terminal then trying to exit out the other terminals --> you get a page fault
+    - 2 hours
+5) BOOTLOOP WHEN YOU TYPE IN A COMMAND IN ONE TERMINAL (NO ENTER), GO TO ANOTHER TERMINAL (EXECUTE COMMAND IN ANOTHER TERMINAL), GO BACK TO FIRST TERMINAL AND EXECUTE THE WRITTEN OUT COMMAND
+    - We changed the way we updated the curr_pcb and we made sure context switching was correct
+    - 2 hours
+6) If keys were entered into the keyboard buffer and were all deleted and then enter was pressed, OS thought command was entered and would produce "no such command"
+    - Resolved by specifically removing the char from the line_char_buffer and replacing it with null terminating character
+    - 1 hour
+7) When CAPS lock is in and shift is pressed, the keys would still enter in uppercase
+    - Resolved by creating a new char array that would map correctly to the caps and shift case
+    - 15 minutes
+8) Pressing the enter key would go to next line but the "391OS>" would not show up and the blank cursor would show
+    - Resolved by sending an empty buffer into keyboard read, therefore it would continue in shell to the next potential line
+    - 25 minutes
+9) Would occasionally page fault in execute when process finishes - issue with halt
+    - The paging in halt was incorrect because the page table was being mapped incorrectly
+    - 30 minutes
+10) Dereferencing NULL did not throw Page Fault Exception
+    - dollar signs were missing in asm volatile
+    - 8 hours
+11) Keyboard was entering incorrect keys when pressed
+    - incorrect keyboard scan codes were used
+    - 20 minutes
+12) Interrupts were not being thrown or handled correctly
+    - EOI was not being sent to both master and slave PIC
+    - 15 minutes
+13) PIC was not being initialized properly
+    - Masked the PIC ports after ICW4 was initialized
+    - 1 hour
+14) RTC frequency was not changing appropriately
+    - Data was being sent to wrong port
+    - 5 minutes
+15) "cat rtc" did not wait before running nothing
+    - Fixed rtc_read to check for changes in flag as opposed to changing flag
+    - 20 minutes
+16) Lack of wrapper functions prior to device handlers caused errors
+    - Created new file with wrappers as opposed to writing "asm volatile" code around the handler
+    - 40 minutes
+17) read_data was not printing out entire file
+    - Stopped ignoring NULL characters
+    - 1 hour
+18) Typing past the screen would wrap around and overwrite line instead of going to next line
+    - The scrolling was not being coded properly
+    - Rewrote the video memory to screen, but added an offset of 1 to account for new line
+    - 40 minutes
+19) Boot-looping caused by incorrectly setting up IDT entries
+    - We were using the wrong gates. We switched to using trap gates instead of interrupt gates
+    - 1 hour
+20) Compiler error caused by incorrect pointer array declaration - cause of error not resolved, but bug is resolved
+    - Declared the array in different file with different structure
+    - 20 minutes
+21) PIT handler was running before setting up shells, however shells need to be set up first in order for scheduling to work properly
+    - Added a flag that allowed the shells to be set up first, thus allowing handler to work afterwards
+    - 1 hour
+22) "cat ." would print the files in the directory but would space them improperly
+    - Fixed it so that the "dread" function returns size of file instead of size 32
+    - 2 hours
+23) Switching terminals from 1 to 3 causes page fault in terminal 3
+    - We fixed the paging so that the directory was pointing to a new page table
+    - 1 hour
+24) "no such command" appears twice every time improper command is entered
+    - This was an error due to keyboard buffer, it was returning the wrong value which is why the user program was interpreting it differently
+    - 2 hours
+25) Switching terminals causes keyboard to stop working from time to time
+    - The keyboard works, but nothing gets printed to screen because the video mapping is incorrect. We fixed this by turning off scheduling
+    - 4 hours
+26) Typing in "ls" command causes it execute twice once your in a different shell
+    - The keyboard buffer was not being entered in properly when moving to a different terminal
+    - 3 hours
+27) Switching terminals causes kernel to boot loop
+    - The curr_pcb was not being updated properly, and the context switching was incorrect
+    - 4 hours
+28) Switching terminals causes process that terminal to stop executing
+    - We had to fix the curr_pcb value so that it was pointing to the appropiate process
+    - 4 hours
+29) Running process in one terminal did not allow another process to run in a different terminal (fish in terminal 1 and 2 and counter in 3)
+    - We fixed the context switching so that processes would change properly
+    - 4 hours
+30) Keyboard read continues to return if enter is spammed
+    - Added while(buffIdx == -1) to only return the buffer once
+    - 1 hour
+31) Running "hello" in one terminal and then switching to a different terminal and entering in keyboard buffer causes second terminal to execute first terminal's "hello"
+    - The kernel was recognizing that the process had changed. We fixed this by correctly coding our context switching
+    - 4 hours
+32) CTRL and SHIFT were recognized when pressed, but not recognized when released
+    - Resolved by creating flags for CTRL and SHIFT, and enabling and disabling them when keyboard recognized scan or escape codes for the respective buttons
+    - 30 minutes
+33) Creating a process in one terminal and creating a terminal afterwards stops the original process
+    - This was happening because the scheduling was being performed incorrectly. Turning off scheduling fixed this bug
+    - 4 hours
+34) Initially, running hello would result in your name being printed in the same line as "391OS"
+    - Resolved by adding a newline char at the end of the keyboard input in the global buffer
+    - 2 hours
+35) As a result of the previous addition, exit was no longer being recognized as a command
+    - Resolved by checking whether the keyboard input was "exit" in keyboard. If so, do not add the new line character, and return the corresponding number of bytes
+    - 2 hours
+36) If the whole line_char_buffer was filled, then hitting enter would result in going to a new line that was completely black
+    - Resolved by replacing the last char in the buffer with a new line char
+    - 20 minutes
+37) Visually changing the change in terminal instead of changing PCB
+    - Did not update curr_pcb when terminal was switching
+    - 3 hours
+38) Boot loop because ESP, EBP were not saved at all from the old process
+    - We saved the ESP and EBP values before context switching
+    - 4 hours
+39) Processes still show in the background of other terminals - not writing to non-video memory
+    - This bug was fixed by turning of scheduling
+    - 5 hours
+40) vidmap system call mapped page directory entries to same page table, thus causing the page table to have the same pointer
+    - This bug is associated with security - We don't want the user code to gain access to kernel memory
+    - 4 hours
+41) Exiting directly from first shell in first terminal causes the keyboard to stop working
+    - Checked to see if the restart flag is active, if so, then we allowed interrupts to be enabled again. This allowed the keyboard to start working again
+    - 4 hours
+42) Filling buffer in hello cuts off last character and replaces with '&'
+    - doesnt cut off last character, adds an & however
+    - Resolved by returning j+1 bytes instead of j+2
+    - 2 hours
